@@ -1,8 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Conversation, ConversationStatus } from './entities/conversation.entity';
-import { Message } from './entities/message.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { In, Repository } from "typeorm";
+import {
+  Conversation,
+  ConversationStatus,
+} from "./entities/conversation.entity";
+import { Message } from "./entities/message.entity";
 
 @Injectable()
 export class ConversationsService {
@@ -13,9 +16,18 @@ export class ConversationsService {
     private readonly messagesRepo: Repository<Message>,
   ) {}
 
-  async findOrCreate(agentId: string, sessionId: string, endUserId?: string): Promise<Conversation> {
+  async findOrCreate(
+    agentId: string,
+    sessionId: string,
+    endUserId?: string,
+  ): Promise<Conversation> {
     const existing = await this.conversationsRepo.findOne({
-      where: { agentId, sessionId, status: ConversationStatus.ACTIVE, endUserId: endUserId ?? null },
+      where: {
+        agentId,
+        sessionId,
+        status: ConversationStatus.ACTIVE,
+        endUserId: endUserId ?? null,
+      },
     });
     if (existing) return existing;
 
@@ -27,7 +39,16 @@ export class ConversationsService {
     const conv = await this.conversationsRepo.findOne({
       where: { id: conversationId },
     });
-    if (!conv) throw new NotFoundException('Conversation not found');
+    if (!conv) throw new NotFoundException("Conversation not found");
+    return conv;
+  }
+
+  async countByAgentIds(agentIds: string[]): Promise<Conversation[]> {
+    const conv = await this.conversationsRepo.find({
+      where: { agentId: In(agentIds) },
+      select: ["totalTokens", "messageCount"],
+    });
+    if (!conv) throw new NotFoundException("Conversation not found");
     return conv;
   }
 
@@ -42,32 +63,37 @@ export class ConversationsService {
     limit = 50,
   ): Promise<{ messages: Message[]; nextCursor: number | null }> {
     const qb = this.messagesRepo
-      .createQueryBuilder('m')
-      .where('m.conversation_id = :conversationId', { conversationId })
-      .orderBy('m.sequence_number', 'ASC')
+      .createQueryBuilder("m")
+      .where("m.conversation_id = :conversationId", { conversationId })
+      .orderBy("m.sequence_number", "ASC")
       .take(limit + 1); // Fetch one extra to detect if there's a next page
 
     if (cursor) {
-      qb.andWhere('m.sequence_number > :cursor', { cursor });
+      qb.andWhere("m.sequence_number > :cursor", { cursor });
     }
 
     const rows = await qb.getMany();
     const hasMore = rows.length > limit;
     const messages = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore ? messages[messages.length - 1].sequenceNumber : null;
+    const nextCursor = hasMore
+      ? messages[messages.length - 1].sequenceNumber
+      : null;
 
     return { messages, nextCursor };
   }
 
-  async incrementStats(conversationId: string, tokensUsed: number): Promise<void> {
+  async incrementStats(
+    conversationId: string,
+    tokensUsed: number,
+  ): Promise<void> {
     await this.conversationsRepo.increment(
       { id: conversationId },
-      'messageCount',
+      "messageCount",
       1,
     );
     await this.conversationsRepo.increment(
       { id: conversationId },
-      'totalTokens',
+      "totalTokens",
       tokensUsed,
     );
     await this.conversationsRepo.update(conversationId, {

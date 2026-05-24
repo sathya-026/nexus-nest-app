@@ -33,7 +33,7 @@ export class ToolsService {
   // ── Encryption helpers ──────────────────────────────────────────────────
 
   private encrypt(data: Record<string, string>): Record<string, string> {
-    console.log("====KEY=== ",this.encryptionKey.length);
+    console.log(this.encryptionKey.length);
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv(ALGORITHM, this.encryptionKey, iv);
     const json = JSON.stringify(data);

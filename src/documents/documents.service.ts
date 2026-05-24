@@ -1,18 +1,15 @@
 import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  PutObjectCommand,
   DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Document, DocumentStatus } from './entities/document.entity';
-import { AgentsService } from '../agents/agents.service';
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { AgentsService } from "../agents/agents.service";
+import { Document, DocumentStatus } from "./entities/document.entity";
 
 @Injectable()
 export class DocumentsService {
@@ -26,13 +23,15 @@ export class DocumentsService {
     private readonly config: ConfigService,
   ) {
     this.s3 = new S3Client({
-      region: config.get<string>('aws.region'),
+      region: config.get<string>("aws.region"),
       credentials: {
-        accessKeyId: config.get<string>('aws.accessKeyId'),
-        secretAccessKey: config.get<string>('aws.secretAccessKey'),
+        accessKeyId: config.get<string>("aws.accessKeyId"),
+        secretAccessKey: config.get<string>("aws.secretAccessKey"),
       },
+      requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
     });
-    this.bucket = config.get<string>('aws.s3Bucket');
+    this.bucket = config.get<string>("aws.s3Bucket");
   }
 
   /**
@@ -52,8 +51,8 @@ export class DocumentsService {
       Bucket: this.bucket,
       Key: s3Key,
       ContentType: fileType,
+      ChecksumAlgorithm: undefined,
     });
-
     const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 600 });
 
     const doc = this.docsRepo.create({
@@ -87,20 +86,30 @@ export class DocumentsService {
     return this.docsRepo.find({ where: { agentId } });
   }
 
-  async findOne(orgId: string, agentId: string, documentId: string): Promise<Document> {
+  async findOne(
+    orgId: string,
+    agentId: string,
+    documentId: string,
+  ): Promise<Document> {
     await this.agentsService.findOne(orgId, agentId);
     const doc = await this.docsRepo.findOne({
       where: { id: documentId, agentId },
     });
-    if (!doc) throw new NotFoundException('Document not found');
+    if (!doc) throw new NotFoundException("Document not found");
     return doc;
   }
 
-  async remove(orgId: string, agentId: string, documentId: string): Promise<void> {
+  async remove(
+    orgId: string,
+    agentId: string,
+    documentId: string,
+  ): Promise<void> {
     const doc = await this.findOne(orgId, agentId, documentId);
 
     // Delete from S3 first, then DB (order matters for cleanup consistency)
-    await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: doc.s3Key }));
+    await this.s3.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: doc.s3Key }),
+    );
     await this.docsRepo.remove(doc);
   }
 

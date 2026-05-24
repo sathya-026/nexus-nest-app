@@ -2,11 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Agent } from './entities/agent.entity';
-import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Agent } from "./entities/agent.entity";
+import { CreateAgentDto, UpdateAgentDto } from "./dto/agent.dto";
 
 @Injectable()
 export class AgentsService {
@@ -31,14 +31,22 @@ export class AgentsService {
     return this.agentsRepo.find({ where: { orgId } });
   }
 
+  async findAllIds(orgId: string): Promise<Agent[]> {
+    return this.agentsRepo.find({ where: { orgId }, select: ["id"] });
+  }
+
   async findOne(orgId: string, agentId: string): Promise<Agent> {
     const agent = await this.agentsRepo.findOne({ where: { id: agentId } });
-    if (!agent) throw new NotFoundException('Agent not found');
+    if (!agent) throw new NotFoundException("Agent not found");
     if (agent.orgId !== orgId) throw new ForbiddenException();
     return agent;
   }
 
-  async update(orgId: string, agentId: string, dto: UpdateAgentDto): Promise<Agent> {
+  async update(
+    orgId: string,
+    agentId: string,
+    dto: UpdateAgentDto,
+  ): Promise<Agent> {
     const agent = await this.findOne(orgId, agentId);
     Object.assign(agent, dto);
     return this.agentsRepo.save(agent);
@@ -56,44 +64,44 @@ export class AgentsService {
 
   // src/agents/agents.service.ts  — add these two methods
 
-/**
- * Lightweight fetch for embed context — no JWT user needed,
- * only checks org ownership and active status.
- */
-async findForEmbed(agentId: string, orgId: string): Promise<Agent | null> {
-  return this.agentsRepo.findOne({
-    where: { id: agentId, orgId, isActive: true },
-  });
-}
-
-/**
- * Validate the request Origin against agent.allowedDomains.
- * Empty allowedDomains = allow all (dev mode).
- * Throws ForbiddenException if the origin is not permitted.
- */
-validateDomain(agent: Agent, origin: string | undefined): void {
-  if (!agent.allowedDomains?.trim()) return;   // open / dev mode
-
-  const allowed = agent.allowedDomains
-    .split(',')
-    .map((d) => d.trim())
-    .filter(Boolean);
-
-  if (!origin) {
-    throw new ForbiddenException(
-      'Origin header required for domain-restricted agents',
-    );
+  /**
+   * Lightweight fetch for embed context — no JWT user needed,
+   * only checks org ownership and active status.
+   */
+  async findForEmbed(agentId: string, orgId: string): Promise<Agent | null> {
+    return this.agentsRepo.findOne({
+      where: { id: agentId, orgId, isActive: true },
+    });
   }
 
-  const hostname = new URL(origin).hostname;
-  const permitted = allowed.some(
-    (d) => hostname === d || hostname.endsWith(`.${d}`),
-  );
+  /**
+   * Validate the request Origin against agent.allowedDomains.
+   * Empty allowedDomains = allow all (dev mode).
+   * Throws ForbiddenException if the origin is not permitted.
+   */
+  validateDomain(agent: Agent, origin: string | undefined): void {
+    if (!agent.allowedDomains?.trim()) return; // open / dev mode
 
-  if (!permitted) {
-    throw new ForbiddenException(
-      `Origin '${origin}' is not permitted for this agent`,
+    const allowed = agent.allowedDomains
+      .split(",")
+      .map((d) => d.trim())
+      .filter(Boolean);
+
+    if (!origin) {
+      throw new ForbiddenException(
+        "Origin header required for domain-restricted agents",
+      );
+    }
+
+    const hostname = new URL(origin).hostname;
+    const permitted = allowed.some(
+      (d) => hostname === d || hostname.endsWith(`.${d}`),
     );
+
+    if (!permitted) {
+      throw new ForbiddenException(
+        `Origin '${origin}' is not permitted for this agent`,
+      );
+    }
   }
-}
 }

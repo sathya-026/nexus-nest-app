@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/credential-providers": "^3.1053.0",
     "@aws-sdk/s3-request-presigner": "^3.540.0",
     "@keyv/redis": "^5.1.6",
     "@nestjs/cache-manager": "^2.2.0",

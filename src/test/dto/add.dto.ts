@@ -1,7 +1,12 @@
-import { IsString, IsOptional, MinLength, MaxLength, IsUUID } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsArray } from "class-validator";
 
 export class AddDto {
-  @ApiProperty()
+  @ApiProperty({
+    type: [Number],
+    example: [1, 2, 3, 4],
+    description: "List of numbers",
+  })
+  @IsArray()
   list: number[];
 }

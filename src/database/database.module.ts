@@ -39,6 +39,7 @@ import { AnalyticsEvent } from '../analytics/entities/analytics-event.entity';
           ToolCall,
           AnalyticsEvent,
         ],        
+        // dropSchema: true,
         // Never use synchronize in production — use migrations instead
         synchronize: config.get('nodeEnv') === 'development',
         migrations: ['dist/database/migrations/*.js'],
