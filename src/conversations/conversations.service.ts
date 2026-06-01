@@ -14,7 +14,7 @@ export class ConversationsService {
     private readonly conversationsRepo: Repository<Conversation>,
     @InjectRepository(Message)
     private readonly messagesRepo: Repository<Message>,
-  ) {}
+  ) { }
 
   async findOrCreate(
     agentId: string,
@@ -80,6 +80,43 @@ export class ConversationsService {
       : null;
 
     return { messages, nextCursor };
+  }
+
+  async getSessionMessages(
+    sessionId: string,
+    cursor?: number,
+    limit = 50,
+  ): Promise<{ messages: Message[]; nextCursor: number | null, conversationId: string }> {
+    try {
+      const conversation = await this.conversationsRepo.findOne({
+        where: { sessionId },
+        select: ["id"],
+      });
+      if (!conversation) throw new NotFoundException("Conversation not found");
+
+      const qb = this.messagesRepo
+        .createQueryBuilder("m")
+        .where("m.conversation_id = :conversationId", { conversationId: conversation.id })
+        .orderBy("m.sequence_number", "ASC")
+        .take(limit + 1);
+
+      if (cursor) {
+        qb.andWhere("m.sequence_number > :cursor", { cursor });
+      }
+
+      const rows = await qb.getMany();
+      const hasMore = rows.length > limit;
+      const messages = hasMore ? rows.slice(0, limit) : rows;
+      const nextCursor = hasMore
+        ? messages[messages.length - 1].sequenceNumber
+        : null;
+
+      return { messages, nextCursor, conversationId: conversation.id };
+    }
+    catch (err) {
+      console.error('Error fetching session messages:', err);
+      throw new NotFoundException("Conversation not found");
+    }
   }
 
   async incrementStats(
