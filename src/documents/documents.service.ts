@@ -10,6 +10,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AgentsService } from "../agents/agents.service";
 import { Document, DocumentStatus } from "./entities/document.entity";
+import { UpdateDocDto } from "./dto/update-doc.dto";
 
 @Injectable()
 export class DocumentsService {
@@ -29,7 +30,7 @@ export class DocumentsService {
         secretAccessKey: config.get<string>("aws.secretAccessKey"),
       },
       requestChecksumCalculation: "WHEN_REQUIRED",
-  responseChecksumValidation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
     this.bucket = config.get<string>("aws.s3Bucket");
   }
@@ -51,7 +52,6 @@ export class DocumentsService {
       Bucket: this.bucket,
       Key: s3Key,
       ContentType: fileType,
-      ChecksumAlgorithm: undefined,
     });
     const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 600 });
 
@@ -111,6 +111,14 @@ export class DocumentsService {
       new DeleteObjectCommand({ Bucket: this.bucket, Key: doc.s3Key }),
     );
     await this.docsRepo.remove(doc);
+  }
+
+  async updateDoc(
+    documentId: string,
+    payload: UpdateDocDto
+  ): Promise<Document> {
+    await this.docsRepo.update(documentId, payload);
+    return await this.docsRepo.findOne({ where: { id: documentId } })
   }
 
   // Called by agent-core after indexing completes

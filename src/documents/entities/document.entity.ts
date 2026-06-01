@@ -6,50 +6,56 @@ import {
   ManyToOne,
   JoinColumn,
   BeforeInsert,
-} from 'typeorm';
-import { uuidv7 } from 'uuidv7';
-import { Agent } from '../../agents/entities/agent.entity';
+} from "typeorm";
+import { uuidv7 } from "uuidv7";
+import { Agent } from "../../agents/entities/agent.entity";
 
 export enum DocumentStatus {
-  PENDING = 'pending',
-  INDEXING = 'indexing',
-  INDEXED = 'indexed',
-  FAILED = 'failed',
+  PENDING = "pending",
+  INDEXING = "indexing",
+  INDEXED = "indexed",
+  FAILED = "failed",
 }
 
-@Entity('documents')
+@Entity("documents")
 export class Document {
-  @PrimaryColumn({ type: 'uuid' })
+  @PrimaryColumn({ type: "uuid" })
   id: string;
 
-  @Column({ type: 'uuid', name: 'agent_id' })
+  @Column({ type: "uuid", name: "agent_id" })
   agentId: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: "varchar", length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 50, name: 'file_type' })
+  @Column({ type: "varchar", length: 50, name: "file_type" })
   fileType: string;
 
   // S3 object key — used to fetch the file for (re)indexing
-  @Column({ type: 'varchar', length: 1024, name: 's3_key' })
+  @Column({ type: "varchar", length: 1024, name: "s3_key" })
   s3Key: string;
 
   @Column({
-    type: 'varchar',
+    type: "varchar",
     length: 50,
     default: DocumentStatus.PENDING,
   })
   status: DocumentStatus;
 
-  @Column({ type: 'int', name: 'chunk_count', default: 0 })
+  @Column({
+    type: "text",
+    default: "",
+  })
+  description: string;
+
+  @Column({ type: "int", name: "chunk_count", default: 0 })
   chunkCount: number;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @ManyToOne(() => Agent, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'agent_id' })
+  @ManyToOne(() => Agent, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "agent_id" })
   agent: Agent;
 
   @BeforeInsert()

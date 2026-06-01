@@ -57,6 +57,11 @@ export class CreateToolDto {
   @IsOptional()
   @IsObject()
   parametersSchema?: Record<string, any>;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 export class UpdateToolDto extends PartialType(CreateToolDto) {
