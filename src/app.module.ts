@@ -12,6 +12,7 @@ import { ToolsModule } from './tools/tools.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { TestModule } from './test/test.module';
+import { WidgetSessionModule } from './widget/session/session.module';
 
 @Module({
   imports: [
@@ -36,6 +37,9 @@ import { TestModule } from './test/test.module';
     ConversationsModule,
     AnalyticsModule,
     TestModule,
+
+    // Widget modules
+    WidgetSessionModule,
   ],
 })
 export class AppModule {}
