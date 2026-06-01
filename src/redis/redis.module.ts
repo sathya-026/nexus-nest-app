@@ -3,8 +3,9 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
+import { CacheService } from './cache.service';
 
-@Global() // Available across all modules without re-importing
+@Global()
 @Module({
   imports: [
     CacheModule.registerAsync({
@@ -28,6 +29,7 @@ import KeyvRedis from '@keyv/redis';
       },
     }),
   ],
-  exports: [CacheModule],
+  providers: [CacheService],
+  exports: [CacheModule, CacheService],
 })
 export class RedisModule {}
