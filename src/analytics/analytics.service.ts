@@ -11,7 +11,6 @@ import { AgentsService } from "@modules/agents/agents.service";
 export interface LogEventInput {
   orgId: string;
   agentId: string;
-  conversationId?: string;
   eventType: AnalyticsEventType | string;
   payload?: Record<string, any>;
 }
@@ -29,7 +28,6 @@ export class AnalyticsService {
     const event = this.eventsRepo.create({
       orgId: input.orgId,
       agentId: input.agentId,
-      conversationId: input.conversationId,
       eventType: input.eventType,
       payload: input.payload ?? {},
     });

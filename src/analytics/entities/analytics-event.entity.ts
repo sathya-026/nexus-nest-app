@@ -36,9 +36,6 @@ export class AnalyticsEvent {
   @Column({ type: 'uuid', name: 'agent_id' })
   agentId: string;
 
-  @Column({ type: 'uuid', name: 'conversation_id', nullable: true })
-  conversationId: string;
-
   @Column({ type: 'varchar', length: 100, name: 'event_type' })
   eventType: AnalyticsEventType | string;
 
