@@ -117,7 +117,10 @@ export class DocumentsService {
     documentId: string,
     payload: UpdateDocDto
   ): Promise<Document> {
-    await this.docsRepo.update(documentId, payload);
+    delete payload.documentId;
+    await this.docsRepo.update(documentId, {
+      ...payload,
+    });
     return await this.docsRepo.findOne({ where: { id: documentId } })
   }
 
