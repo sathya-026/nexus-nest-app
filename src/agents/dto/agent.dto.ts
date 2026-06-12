@@ -19,6 +19,14 @@ export class CreateAgentDto {
   @IsString()
   systemPrompt: string;
 
+  @ApiProperty({ example: 'openai' })
+  @IsString()
+  llmProvider: 'azure' | 'openai' | 'anthropic';
+
+  @ApiProperty({ example: 'gpt-4o-mini' })
+  @IsString()
+  llmModel: string;
+
   @ApiPropertyOptional({
     example: { primaryColor: '#6366f1', position: 'bottom-right', welcomeMessage: 'Hi!' },
   })

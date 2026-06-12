@@ -40,6 +40,12 @@ export class Agent {
   @Column({ type: 'text', name: 'allowed_domains', nullable: true })
   allowedDomains: string;
 
+  @Column({ type: 'varchar', length: 50, name: 'llm_provider', default: 'openai' })
+  llmProvider: 'azure' | 'openai' | 'anthropic';
+
+  @Column({ type: 'varchar', length: 255, name: 'llm_model', default: 'gpt-4o-mini' })
+  llmModel: string;
+
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
 

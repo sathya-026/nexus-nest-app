@@ -68,9 +68,9 @@ export class AgentsService {
    * Lightweight fetch for embed context — no JWT user needed,
    * only checks org ownership and active status.
    */
-  async findForEmbed(agentId: string, orgId: string): Promise<Agent | null> {
+  async findForEmbed(agentId: string): Promise<Agent | null> {
     return this.agentsRepo.findOne({
-      where: { id: agentId, orgId, isActive: true },
+      where: { id: agentId, isActive: true },
     });
   }
 
