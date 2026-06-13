@@ -1,8 +1,8 @@
-import { Module, Global } from '@nestjs/common';
+import { createKeyv, Keyv } from '@keyv/redis';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Keyv } from 'keyv';
-import KeyvRedis from '@keyv/redis';
+import { KeyvCacheableMemory } from 'cacheable';
 import { CacheService } from './cache.service';
 
 @Global()
@@ -20,16 +20,21 @@ import { CacheService } from './cache.service';
         const redisUrl = password
           ? `redis://:${password}@${host}:${port}`
           : `redis://${host}:${port}`;
-
-        const keyvStore = new KeyvRedis(redisUrl);
+        const keyvRedis = createKeyv(redisUrl)
+  
         return {
-          stores: [keyvStore],
-          ttl: 300, // Default 5 minutes
+          stores: [
+            keyvRedis,
+            new Keyv({
+              store: new KeyvCacheableMemory({ ttl: 60000, lruSize: 5000 }),
+            }),
+          ],
+          ttl: 300,
         };
       },
     }),
   ],
   providers: [CacheService],
-  exports: [CacheModule, CacheService],
+  exports: [CacheService],
 })
-export class RedisModule {}
+export class RedisModule { }

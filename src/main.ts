@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RolesGuard } from './common/guards/roles.guard';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,9 @@ async function bootstrap() {
     origin: isProduction ? process.env.DASHBOARD_URL : true,
     credentials: true,
   });
+
+  // ── Cookie Parser ──────────────────────────────────────────────────────────────────
+  app.use(cookieParser());
 
   // ── Global validation pipe ────────────────────────────────────────────────
   // whitelist: strips unknown properties from incoming DTOs

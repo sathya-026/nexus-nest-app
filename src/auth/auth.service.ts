@@ -61,7 +61,7 @@ export class AuthService {
   async login(dto: LoginDto, res: Response) {
     const user = await this.usersRepo.findOne({
       where: { email: dto.email },
-      relations: ['org'],
+      relations: ['organization'],
     });
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
@@ -99,7 +99,7 @@ export class AuthService {
     // 3. Load user and re-issue
     const user = await this.usersRepo.findOne({
       where: { id: payload.sub },
-      relations: ['org'],
+      relations: ['organization'],
     });
     if (!user) throw new UnauthorizedException();
 
@@ -138,7 +138,7 @@ export class AuthService {
         expiresIn: '7d',
       },
     );
-    await this.cacheService.set(`refresh:${user.id}`, this.hash(refreshToken), REFRESH_TTL_S);
+    await this.cacheService.set(`refresh:${user.id}`, this.hash(refreshToken), REFRESH_TTL_MS);
 
     const isProd = this.config.get('NODE_ENV') === 'production';
     const base = { httpOnly: true, secure: isProd, sameSite: 'strict' as const };
@@ -149,7 +149,7 @@ export class AuthService {
     res.cookie(REFRESH_COOKIE, refreshToken, {
       ...base,
       maxAge: REFRESH_TTL_MS,
-      path: '/auth/refresh',
+      path: '/api/v1/auth/refresh',
     });
   }
 

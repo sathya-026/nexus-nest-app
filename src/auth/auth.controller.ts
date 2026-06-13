@@ -11,6 +11,7 @@ import { AuthUser } from './interfaces/jwt-payload.interface';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new organization + owner account' })
   @ApiResponse({ status: 201, description: 'Returns JWT + org details' })
@@ -21,6 +22,7 @@ export class AuthController {
     return this.authService.register(dto, res);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login and receive a JWT' })
@@ -59,6 +61,6 @@ export class AuthController {
 
   @Get('me')
   me(@CurrentUser() user: AuthUser) {
-    return user;
+    return { user };
   }
 }
