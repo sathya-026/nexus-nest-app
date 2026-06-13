@@ -12,8 +12,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ToolsService } from './tools.service';
 import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
+import { CurrentUser } from '@common/decorators';
+import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
 
 @ApiTags('Tools')
 @ApiBearerAuth()
@@ -25,7 +25,7 @@ export class ToolsController {
   @Post()
   @ApiOperation({ summary: 'Add a tool to an agent' })
   create(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Body() dto: CreateToolDto,
   ) {
@@ -35,7 +35,7 @@ export class ToolsController {
   @Get()
   @ApiOperation({ summary: 'List tools for an agent' })
   findAll(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
   ) {
     return this.toolsService.findAll(user.orgId, agentId);
@@ -44,7 +44,7 @@ export class ToolsController {
   @Get(':toolId')
   @ApiOperation({ summary: 'Get a single tool' })
   findOne(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Param('toolId') toolId: string,
   ) {
@@ -54,7 +54,7 @@ export class ToolsController {
   @Patch(':toolId')
   @ApiOperation({ summary: 'Update a tool' })
   update(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Param('toolId') toolId: string,
     @Body() dto: UpdateToolDto,
@@ -65,7 +65,7 @@ export class ToolsController {
   @Delete(':toolId')
   @ApiOperation({ summary: 'Delete a tool' })
   remove(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Param('toolId') toolId: string,
   ) {

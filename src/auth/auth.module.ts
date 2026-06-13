@@ -1,12 +1,13 @@
+import { Organization } from '@modules/organizations/entities/organization.entity';
+import { User } from '@modules/users/entities/user.entity';
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { UsersModule } from '../users/users.module';
-import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
@@ -19,11 +20,10 @@ import { OrganizationsModule } from '../organizations/organizations.module';
         signOptions: { expiresIn: config.get<string>('jwt.expiresIn') },
       }),
     }),
-    UsersModule,
-    OrganizationsModule,
+    TypeOrmModule.forFeature([User, Organization]),
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
-  exports: [JwtModule],
+  exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

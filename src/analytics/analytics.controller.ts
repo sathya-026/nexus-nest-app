@@ -2,8 +2,8 @@ import { Controller, Get, Query, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
+import { CurrentUser } from '@common/decorators';
+import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
 
 @ApiTags('Analytics')
 @ApiBearerAuth()
@@ -17,7 +17,7 @@ export class AnalyticsController {
   @ApiQuery({ name: 'agentId', required: false })
   @ApiQuery({ name: 'since', required: false, description: 'ISO date string' })
   getSummary(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Query('agentId') agentId?: string,
     @Query('since') since?: string,
   ) {
@@ -33,7 +33,7 @@ export class AnalyticsController {
   @ApiQuery({ name: 'agentId', required: false })
   @ApiQuery({ name: 'limit', required: false })
   getEvents(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Query('agentId') agentId?: string,
     @Query('limit') limit?: string,
   ) {

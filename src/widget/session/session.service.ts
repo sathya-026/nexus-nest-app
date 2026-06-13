@@ -35,7 +35,7 @@ export class SessionService {
             this.assertOriginAllowed(requestOrigin, agent.allowedDomains);
 
             const tokenKey = `widget_session:${agent.id}:${dto.sessionId}`;
-            const existingToken = await this.cacheService.getToken(tokenKey);
+            const existingToken = await this.cacheService.get(tokenKey);
                             console.log("existing session token ", existingToken, "for session", dto.sessionId);
 
             if (existingToken) {
@@ -56,8 +56,8 @@ export class SessionService {
                 token,
                 expiresAt: new Date(Date.now() + TTL_MS).toISOString(),
             };
-            await this.cacheService.setToken(tokenKey, JSON.stringify(sessionData), TTL_MS / 1000);
-            console.log('test token ',await this.cacheService.getToken(tokenKey))
+            await this.cacheService.set(tokenKey, JSON.stringify(sessionData), TTL_MS / 1000);
+            console.log('test token ',await this.cacheService.get(tokenKey))
 
             return sessionData;
         }

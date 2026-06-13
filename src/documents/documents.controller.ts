@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
+import { CurrentUser } from '@common/decorators';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { DocumentsService } from './documents.service';
 import { UpdateDocDto } from './dto/update-doc.dto';
@@ -33,7 +33,7 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Get a pre-signed S3 URL to upload a document' })
   @ApiBody({ type: RequestUploadDto })
   getUploadUrl(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Body() dto: RequestUploadDto,
   ) {
@@ -48,7 +48,7 @@ export class DocumentsController {
   @Post(':documentId/confirm')
   @ApiOperation({ summary: 'Confirm S3 upload succeeded — triggers indexing' })
   async confirmUpload(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Body() dto: UpdateDocDto,
     @Param('agentId') agentId: string,
     @Param('documentId') documentId: string,
@@ -86,7 +86,7 @@ export class DocumentsController {
   @Get()
   @ApiOperation({ summary: 'List documents for an agent' })
   findAll(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
   ) {
     return this.documentsService.findAll(user.orgId, agentId);
@@ -95,7 +95,7 @@ export class DocumentsController {
   @Get(':documentId')
   @ApiOperation({ summary: 'Get document details + indexing status' })
   findOne(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Param('documentId') documentId: string,
   ) {
@@ -105,7 +105,7 @@ export class DocumentsController {
   @Patch(':documentId')
   @ApiOperation({ summary: 'Delete a document and remove from S3 + vector store' })
   update(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('documentId') documentId: string,
     @Body() dto: UpdateDocDto,
   ) {
@@ -115,7 +115,7 @@ export class DocumentsController {
   @Delete(':documentId')
   @ApiOperation({ summary: 'Delete a document and remove from S3 + vector store' })
   remove(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('agentId') agentId: string,
     @Param('documentId') documentId: string,
   ) {

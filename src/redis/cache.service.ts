@@ -8,15 +8,15 @@ export class CacheService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async setToken(key: string, token: string, ttlSeconds: number = 3600): Promise<void> {
+  async set(key: string, token: string, ttlSeconds: number = 3600): Promise<void> {
     await this.cacheManager.set(key, token, ttlSeconds);
   }
 
-  async getToken(key: string): Promise<string | null> {
+  async get(key: string): Promise<string | null> {
     return await this.cacheManager.get<string>(key);
   }
 
-  async removeToken(key: string): Promise<void> {
+  async delete(key: string): Promise<void> {
     await this.cacheManager.del(key);
   }
 }

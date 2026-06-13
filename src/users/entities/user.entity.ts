@@ -9,11 +9,7 @@ import {
 } from 'typeorm';
 import { uuidv7 } from 'uuidv7';
 import { Organization } from '../../organizations/entities/organization.entity';
-
-export enum UserRole {
-  OWNER = 'owner',
-  MEMBER = 'member',
-}
+import { Role } from '@common/enums/role.enum';
 
 @Entity('users')
 export class User {
@@ -29,8 +25,8 @@ export class User {
   @Column({ type: 'varchar', length: 255, name: 'password_hash' })
   passwordHash: string;
 
-  @Column({ type: 'varchar', length: 50, default: UserRole.MEMBER })
-  role: UserRole;
+  @Column({ type: 'varchar', length: 50, default: Role.Member })
+  role: Role;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

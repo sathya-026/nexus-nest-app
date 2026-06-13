@@ -1,17 +1,20 @@
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import configuration from './config/configuration';
-import { DatabaseModule } from './database/database.module';
-import { RedisModule } from './redis/redis.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { OrganizationsModule } from './organizations/organizations.module';
+import { APP_GUARD } from '@nestjs/core';
 import { AgentsModule } from './agents/agents.module';
-import { DocumentsModule } from './documents/documents.module';
-import { ToolsModule } from './tools/tools.module';
-import { ConversationsModule } from './conversations/conversations.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AuthModule } from './auth/auth.module';
+import configuration from './config/configuration';
+import { ConversationsModule } from './conversations/conversations.module';
+import { DatabaseModule } from './database/database.module';
+import { DocumentsModule } from './documents/documents.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { RedisModule } from './redis/redis.module';
 import { TestModule } from './test/test.module';
+import { ToolsModule } from './tools/tools.module';
+import { UsersModule } from './users/users.module';
 import { WidgetSessionModule } from './widget/session/session.module';
 
 @Module({
@@ -41,5 +44,15 @@ import { WidgetSessionModule } from './widget/session/session.module';
     // Widget modules
     WidgetSessionModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ]
 })
-export class AppModule {}
+export class AppModule { }

@@ -1,43 +1,26 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../../users/users.service';
-
-export interface JwtPayload {
-  sub: string;      // userId
-  email: string;
-  orgId: string;
-  role: string;
-}
-
-// The object attached to request.user after a successful JWT verification
-export interface AuthenticatedUser {
-  userId: string;
-  email: string;
-  orgId: string;
-  role: string;
-}
+import { PassportStrategy } from '@nestjs/passport';
+import { Request } from 'express';
+import { Strategy } from 'passport-jwt';
+import { AuthUser, JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    private readonly config: ConfigService,
-    private readonly usersService: UsersService,
-  ) {
+  constructor(config: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Extract JWT from the access_token HTTP-only cookie.
+      // Never from the Authorization header — that would allow JS access.
+      jwtFromRequest: (req: Request) => req?.cookies?.access_token ?? null,
       ignoreExpiration: false,
-      secretOrKey: config.get<string>('jwt.secret'),
+      secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
     });
   }
 
-  async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    const user = await this.usersService.findById(payload.sub);
-    if (!user) throw new UnauthorizedException('User no longer exists');
-
+  // Return value is attached to request.user
+  validate(payload: JwtPayload): AuthUser {
     return {
-      userId: payload.sub,
+      id: payload.sub,
       email: payload.email,
       orgId: payload.orgId,
       role: payload.role,

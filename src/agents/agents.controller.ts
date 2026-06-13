@@ -1,26 +1,25 @@
+import { CurrentUser } from '@common/decorators';
+import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
-  UseGuards,
   ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
+  ApiOperation,
+  ApiTags
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AgentsService } from './agents.service';
 import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Agents')
 @ApiBearerAuth()
@@ -30,12 +29,12 @@ export class AgentsController {
   constructor(
     private readonly agentsService: AgentsService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new agent' })
   create(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Body() dto: CreateAgentDto,
   ) {
     return this.agentsService.create(user.orgId, dto);
@@ -43,14 +42,14 @@ export class AgentsController {
 
   @Get()
   @ApiOperation({ summary: 'List all agents for the org' })
-  findAll(@CurrentUser() user: AuthenticatedUser) {
+  findAll(@CurrentUser() user: AuthUser) {
     return this.agentsService.findAll(user.orgId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single agent' })
   findOne(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.agentsService.findOne(user.orgId, id);
@@ -59,7 +58,7 @@ export class AgentsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update an agent' })
   update(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAgentDto,
   ) {
@@ -69,7 +68,7 @@ export class AgentsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an agent' })
   remove(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.agentsService.remove(user.orgId, id);
@@ -78,7 +77,7 @@ export class AgentsController {
   @Get(':id/embed')
   @ApiOperation({ summary: 'Generate embed snippet for the agent' })
   getEmbedCode(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     // Verify ownership first
