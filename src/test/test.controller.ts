@@ -21,7 +21,6 @@ export class TestController {
 
   @Get("current")
   getCurrent(@Query("lat") lat: string, @Query("lon") lon: string) {
-    console.log("=== LAT AND LONG ===",lat, " AND ", lon);
     return this.weatherService.getCurrentWeather({
       latitude: Number(lat),
       longitude: Number(lon),

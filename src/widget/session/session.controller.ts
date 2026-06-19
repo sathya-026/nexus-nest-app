@@ -8,7 +8,7 @@ export class SessionController {
   constructor(private readonly service: SessionService) {}
 
   @Post('session')
-  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // 10 req/min per IP
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   createSession(
     @Body() dto: CreateSessionDto,
     @Headers('origin') origin: string,

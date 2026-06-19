@@ -84,7 +84,7 @@ export class AuthService {
     let payload: { sub: string };
     try {
       payload = this.jwtService.verify(rawRefreshToken, {
-        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+        secret: this.config.getOrThrow('jwt.refreshSecret'),
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -126,7 +126,7 @@ export class AuthService {
       role: user.role as Role,
     };
     const accessToken = this.jwtService.sign(accessPayload, {
-      secret: this.config.getOrThrow('JWT_SECRET'),
+      secret: this.config.getOrThrow('jwt.secret'),
       expiresIn: '15m',
     });
 
@@ -134,10 +134,11 @@ export class AuthService {
     const refreshToken = this.jwtService.sign(
       { sub: user.id },
       {
-        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+        secret: this.config.getOrThrow('jwt.refreshSecret'),
         expiresIn: '7d',
       },
     );
+
     await this.cacheService.set(`refresh:${user.id}`, this.hash(refreshToken), REFRESH_TTL_MS);
 
     const isProd = this.config.get('NODE_ENV') === 'production';

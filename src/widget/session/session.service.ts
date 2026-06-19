@@ -36,10 +36,8 @@ export class SessionService {
 
             const tokenKey = `widget_session:${agent.id}:${dto.sessionId}`;
             const existingToken = await this.cacheService.get(tokenKey);
-                            console.log("existing session token ", existingToken, "for session", dto.sessionId);
 
             if (existingToken) {
-                console.log("Found existing session token ", existingToken);
                 return JSON.parse(existingToken);
             }
 
@@ -56,9 +54,7 @@ export class SessionService {
                 token,
                 expiresAt: new Date(Date.now() + TTL_MS).toISOString(),
             };
-            await this.cacheService.set(tokenKey, JSON.stringify(sessionData), TTL_MS / 1000);
-            console.log('test token ',await this.cacheService.get(tokenKey))
-
+            await this.cacheService.set(tokenKey, JSON.stringify(sessionData), TTL_MS);
             return sessionData;
         }
         catch (err) {

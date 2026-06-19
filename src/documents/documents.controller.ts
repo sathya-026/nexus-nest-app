@@ -16,6 +16,8 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { DocumentsService } from './documents.service';
 import { UpdateDocDto } from './dto/update-doc.dto';
 import { ConfigService } from '@nestjs/config';
+import { Roles } from '@common/decorators/roles.decorator';
+import { Role } from '@common/enums/role.enum';
 
 class RequestUploadDto {
   @IsString() fileName: string;
@@ -25,6 +27,7 @@ class RequestUploadDto {
 @ApiTags('Documents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Roles(Role.Admin, Role.Owner)
 @Controller('agents/:agentId/documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService, private readonly config: ConfigService) { }
