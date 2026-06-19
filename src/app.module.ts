@@ -16,6 +16,10 @@ import { TestModule } from './test/test.module';
 import { ToolsModule } from './tools/tools.module';
 import { UsersModule } from './users/users.module';
 import { WidgetSessionModule } from './widget/session/session.module';
+import { WidgetAuthModule } from './widget/auth/widget-auth.module';
+import { TeamModule } from './team/team.module';
+import { InvitationsModule } from './invitations/invitations.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -29,10 +33,13 @@ import { WidgetSessionModule } from './widget/session/session.module';
     // Infrastructure
     DatabaseModule,
     RedisModule,
+    MailModule,
 
     // Domain modules
     AuthModule,
     UsersModule,
+    TeamModule,
+    InvitationsModule,
     OrganizationsModule,
     AgentsModule,
     DocumentsModule,
@@ -42,6 +49,7 @@ import { WidgetSessionModule } from './widget/session/session.module';
     TestModule,
 
     // Widget modules
+    WidgetAuthModule,
     WidgetSessionModule,
   ],
   providers: [

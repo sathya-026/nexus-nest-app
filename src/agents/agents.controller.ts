@@ -1,10 +1,11 @@
-import { CurrentUser } from '@common/decorators';
+import { CurrentUser, Public } from '@common/decorators';
 import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
 import {
   Body,
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -20,10 +21,14 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AgentsService } from './agents.service';
 import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
+import { Roles } from '@common/decorators/roles.decorator';
+import { Role } from '@common/enums/role.enum';
+import { RolesGuard } from '@common/guards/roles.guard';
 
 @ApiTags('Agents')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.Owner)
 @Controller('agents')
 export class AgentsController {
   constructor(
@@ -31,6 +36,7 @@ export class AgentsController {
     private readonly config: ConfigService,
   ) { }
 
+  
   @Post()
   @ApiOperation({ summary: 'Create a new agent' })
   create(
@@ -72,6 +78,24 @@ export class AgentsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.agentsService.remove(user.orgId, id);
+  }
+
+  // In AgentsController — add this route
+  // @Public() is already imported from common decorators
+
+  @Public()
+  @Get(':id/widget-config')
+  async getWidgetConfig(@Param('id') id: string) {
+    console.log('check-in')
+    const agent = await this.agentsService.findByIdPublic(id);
+    if (!agent) throw new NotFoundException('Agent not found');
+
+    // Only expose what the widget needs — never expose system prompt or org internals
+    return {
+      name: agent.name,
+      accessType: agent.accessType,
+      widgetConfig: agent.widgetConfig,  // { colors, position, welcomeMessage }
+    };
   }
 
   @Get(':id/embed')

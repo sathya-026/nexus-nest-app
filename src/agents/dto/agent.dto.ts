@@ -19,6 +19,10 @@ export class CreateAgentDto {
   @IsString()
   systemPrompt: string;
 
+  @ApiProperty({ example: 'private' })
+  @IsString()
+  accessType: 'public' | 'private'
+
   @ApiProperty({ example: 'openai' })
   @IsString()
   llmProvider: 'azure' | 'openai' | 'anthropic';

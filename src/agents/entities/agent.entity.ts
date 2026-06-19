@@ -36,6 +36,9 @@ export class Agent {
   @Column({ type: 'jsonb', name: 'widget_config', default: {} })
   widgetConfig: WidgetConfig;
 
+  @Column({ name: 'access_type', default: 'public' })
+  accessType: 'public' | 'private';
+
   // Comma-separated list of allowed domains for embed (e.g. "example.com,app.example.com")
   @Column({ type: 'text', name: 'allowed_domains', nullable: true })
   allowedDomains: string;
