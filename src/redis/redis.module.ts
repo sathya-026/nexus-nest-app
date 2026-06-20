@@ -13,15 +13,19 @@ import { CacheService } from './cache.service';
       inject: [ConfigService],
       isGlobal: true,
       useFactory: async (config: ConfigService) => {
-        const host = config.get<string>('redis.host');
-        const port = config.get<number>('redis.port');
-        const password = config.get<string>('redis.password');
+        let redisUrl = config.get<string>('redis.url');
+        if (!redisUrl) {
+          const host = config.get<string>('redis.host');
+          const port = config.get<number>('redis.port');
+          const password = config.get<string>('redis.password');
 
-        const redisUrl = password
-          ? `redis://:${password}@${host}:${port}`
-          : `redis://${host}:${port}`;
+          redisUrl = password
+            ? `redis://:${password}@${host}:${port}`
+            : `redis://${host}:${port}`;
+        }
+
         const keyvRedis = createKeyv(redisUrl)
-  
+
         return {
           stores: [
             keyvRedis,

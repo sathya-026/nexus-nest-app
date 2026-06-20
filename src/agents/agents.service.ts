@@ -19,6 +19,7 @@ export class AgentsService {
     const agent = this.agentsRepo.create({
       orgId,
       name: dto.name,
+      accessType: dto.accessType,
       systemPrompt: dto.systemPrompt,
       widgetConfig: dto.widgetConfig ?? {},
       allowedDomains: dto.allowedDomains ?? null,

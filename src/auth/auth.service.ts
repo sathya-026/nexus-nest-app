@@ -127,7 +127,7 @@ export class AuthService {
     };
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.config.getOrThrow('jwt.secret'),
-      expiresIn: '15m',
+      expiresIn: '1h',
     });
 
     // Refresh token — longer-lived JWT, hash stored in Redis for revocation
