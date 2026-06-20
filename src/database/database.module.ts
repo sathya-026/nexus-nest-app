@@ -49,6 +49,7 @@ import { User } from '../users/entities/user.entity';
         ],
         // dropSchema: true,
         // Never use synchronize in production — use migrations instead
+        autoLoadEntities: true,
         synchronize: config.get('nodeEnv') === 'development',
         migrations: ['dist/database/migrations/*.js'],
         logging: config.get('nodeEnv') === 'development',
