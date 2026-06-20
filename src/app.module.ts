@@ -20,6 +20,7 @@ import { WidgetAuthModule } from './widget/auth/widget-auth.module';
 import { TeamModule } from './team/team.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { MailModule } from './mail/mail.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-  ]
+  ],
+  controllers: [AppController]
 })
 export class AppModule { }

@@ -19,7 +19,7 @@ async function bootstrap() {
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
     // In production, tighten this to your dashboard domain
-    origin: isProduction ? process.env.DASHBOARD_URL : true,
+    origin: isProduction ? process.env.FRONTEND_URL : true,
     credentials: true,
   });
 
