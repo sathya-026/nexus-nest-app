@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Never from the Authorization header — that would allow JS access.
       jwtFromRequest: (req: Request) => req?.cookies?.access_token ?? null,
       ignoreExpiration: false,
-      secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
+      secretOrKey: config.getOrThrow<string>('jwt.secret'),
     });
   }
 
