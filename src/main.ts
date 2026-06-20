@@ -5,31 +5,38 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RolesGuard } from './common/guards/roles.guard';
+import { NestExpressApplication } from '@nestjs/platform-express'; // <-- 1. IMPORT THIS
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule); 
+  
   const config = app.get(ConfigService);
   const port = config.get<number>('port');
   const isProduction = config.get<string>('nodeEnv') === 'production';
+
+  // ── TRUST PROXY (Crucial for Render SSL/Cookies) ──────────────────────────
+  if (isProduction) {
+    app.getHttpAdapter().getInstance().set('trust proxy', 1); // <-- 3. ADD THIS
+  }
 
   // ── Global prefix ─────────────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
-    // In production, tighten this to your dashboard domain
-    origin: isProduction ? process.env.FRONTEND_URL : true,
+    // 4. FIX FOR POSTMAN: Postman doesn't send an 'Origin' header like a browser does.
+    // If process.env.FRONTEND_URL is enforced rigidly, production Postman requests will fail CORS.
+    origin: isProduction 
+      ? [process.env.FRONTEND_URL, 'https://oauth.pstmn.io'] // Allows frontend AND Postman web/app desktop traffic
+      : true,
     credentials: true,
   });
 
-  // ── Cookie Parser ──────────────────────────────────────────────────────────────────
+  // ── Cookie Parser ──────────────────────────────────────────────────────────
   app.use(cookieParser());
 
   // ── Global validation pipe ────────────────────────────────────────────────
-  // whitelist: strips unknown properties from incoming DTOs
-  // forbidNonWhitelisted: throws 400 if unknown properties are sent
-  // transform: auto-converts plain objects to DTO class instances
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -65,7 +72,7 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  console.log(`🚀 Nexus backend running on http://localhost:${port}/api/v1`);
+  console.log(`🚀 Nexus backend running on port ${port}`);
 }
 
 bootstrap();
