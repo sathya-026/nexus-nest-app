@@ -11,14 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       // Extract JWT from the access_token HTTP-only cookie.
       // Never from the Authorization header — that would allow JS access.
-      jwtFromRequest: (req: Request) => {
-
-        console.log('COOKIES:', req?.cookies);
-        console.log('COOKIE HEADER:', req?.headers?.cookie);
-
-        return req?.cookies?.access_token ?? null;
-
-      },
+      jwtFromRequest: (req: Request) => req?.cookies?.access_token ?? null,
       ignoreExpiration: false,
       secretOrKey: config.getOrThrow<string>('jwt.secret'),
     });
@@ -26,7 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // Return value is attached to request.user
   validate(payload: JwtPayload): AuthUser {
-    console.log('JWT PAYLOAD:', payload);
     return {
       id: payload.sub,
       email: payload.email,
