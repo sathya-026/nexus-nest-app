@@ -2,7 +2,9 @@ import { Controller, Post, Body, Headers } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { SessionService, } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
+import { Public } from '@common/decorators';
 
+@Public()
 @Controller('widget')
 export class SessionController {
   constructor(private readonly service: SessionService) {}
