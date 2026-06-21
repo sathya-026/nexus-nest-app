@@ -142,7 +142,7 @@ export class AuthService {
     await this.cacheService.set(`refresh:${user.id}`, this.hash(refreshToken), REFRESH_TTL_MS);
 
     const isProd = this.config.get('NODE_ENV') === 'production';
-    const base = { httpOnly: true, secure: isProd, sameSite: 'strict' as const };
+    const base = { httpOnly: true, secure: isProd, sameSite: 'none' as const };
 
     res.cookie(ACCESS_COOKIE, accessToken, { ...base, maxAge: ACCESS_TTL_MS });
 
