@@ -9,8 +9,8 @@ import { NestExpressApplication } from '@nestjs/platform-express'; // <-- 1. IMP
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule); 
-  
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
   const config = app.get(ConfigService);
   const port = config.get<number>('port');
   const isProduction = config.get<string>('nodeEnv') === 'production';
@@ -23,12 +23,15 @@ async function bootstrap() {
   // ── Global prefix ─────────────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
 
+  console.log('--- CORS DEBUG LOG ---');
+  console.log('isProduction:', isProduction);
+  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+  console.log('----------------------');
+
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
-    // 4. FIX FOR POSTMAN: Postman doesn't send an 'Origin' header like a browser does.
-    // If process.env.FRONTEND_URL is enforced rigidly, production Postman requests will fail CORS.
-    origin: isProduction 
-      ? [process.env.FRONTEND_URL, 'https://oauth.pstmn.io'] // Allows frontend AND Postman web/app desktop traffic
+    origin: isProduction
+      ? [process.env.FRONTEND_URL?.replace(/\/$/, '')]
       : true,
     credentials: true,
   });
