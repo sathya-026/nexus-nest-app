@@ -81,10 +81,6 @@ export class SessionService {
             throw new ForbiddenException('Malformed origin');
         }
 
-        console.log('=== ALLOWED ORIGIN ===');
-        console.log(hostname);
-        console.log(allowedDomains);
-
         const allowed = allowedDomains
             .split(',')
             .map((d) => d.trim().toLowerCase())
