@@ -23,15 +23,12 @@ async function bootstrap() {
   // ── Global prefix ─────────────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
 
-  console.log('--- CORS DEBUG LOG ---');
-  console.log('isProduction:', isProduction);
-  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-  console.log('----------------------');
-
   // ── CORS ──────────────────────────────────────────────────────────────────
+  const allowedOrigins = JSON.parse(process.env.CORS_ALLOWED_ORIGINS || "[]") as string[];
+
   app.enableCors({
     origin: isProduction
-      ? [process.env.FRONTEND_URL?.replace(/\/$/, '')]
+      ? [process.env.FRONTEND_URL?.replace(/\/$/, ''), ...allowedOrigins.map((o) => o.replace(/\/$/, ''))]
       : true,
     credentials: true,
   });
