@@ -115,7 +115,7 @@ export class AuthService {
 
   // ─── Token helpers ────────────────────────────────────────────────────────
 
-  private async issueTokens(user: User, res: Response) {
+  async issueTokens(user: User, res: Response) {
     const orgId = user.organization?.id ?? (user as any).orgId;
 
     // Access token — short-lived JWT

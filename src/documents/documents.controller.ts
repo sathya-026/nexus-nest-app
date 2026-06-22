@@ -27,12 +27,12 @@ class RequestUploadDto {
 @ApiTags('Documents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Roles(Role.Admin, Role.Owner)
 @Controller('agents/:agentId/documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService, private readonly config: ConfigService) { }
 
   @Post('upload-url')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Get a pre-signed S3 URL to upload a document' })
   @ApiBody({ type: RequestUploadDto })
   getUploadUrl(
@@ -49,6 +49,7 @@ export class DocumentsController {
   }
 
   @Post(':documentId/confirm')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Confirm S3 upload succeeded — triggers indexing' })
   async confirmUpload(
     @CurrentUser() user: AuthUser,
@@ -106,6 +107,7 @@ export class DocumentsController {
   }
 
   @Patch(':documentId')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Delete a document and remove from S3 + vector store' })
   update(
     @CurrentUser() user: AuthUser,
@@ -116,6 +118,7 @@ export class DocumentsController {
   }
 
   @Delete(':documentId')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Delete a document and remove from S3 + vector store' })
   remove(
     @CurrentUser() user: AuthUser,

@@ -28,7 +28,6 @@ import { RolesGuard } from '@common/guards/roles.guard';
 @ApiTags('Agents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.Owner)
 @Controller('agents')
 export class AgentsController {
   constructor(
@@ -38,6 +37,7 @@ export class AgentsController {
 
   
   @Post()
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Create a new agent' })
   create(
     @CurrentUser() user: AuthUser,
@@ -49,7 +49,7 @@ export class AgentsController {
   @Get()
   @ApiOperation({ summary: 'List all agents for the org' })
   findAll(@CurrentUser() user: AuthUser) {
-    return this.agentsService.findAll(user.orgId);
+    return this.agentsService.findAll(user.orgId, user);
   }
 
   @Get(':id')
@@ -58,10 +58,11 @@ export class AgentsController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.agentsService.findOne(user.orgId, id);
+    return this.agentsService.findOneWithRoleCheck(id, user);
   }
 
   @Patch(':id')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Update an agent' })
   update(
     @CurrentUser() user: AuthUser,
@@ -72,6 +73,7 @@ export class AgentsController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Delete an agent' })
   remove(
     @CurrentUser() user: AuthUser,

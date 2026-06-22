@@ -1,21 +1,27 @@
+import { Role } from "@common/enums/role.enum";
+import { AuthUser } from "@modules/auth/interfaces/jwt-payload.interface";
+import { UserAgentAccess } from "@modules/team/entities/user-agent-access.entity";
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Agent } from "./entities/agent.entity";
 import { CreateAgentDto, UpdateAgentDto } from "./dto/agent.dto";
+import { Agent } from "./entities/agent.entity";
 
 @Injectable()
 export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentsRepo: Repository<Agent>,
-  ) {}
+    @InjectRepository(UserAgentAccess)
+    private readonly userAgentAccessRepo: Repository<UserAgentAccess>,
+  ) { }
 
   async create(orgId: string, dto: CreateAgentDto): Promise<Agent> {
+
     const agent = this.agentsRepo.create({
       orgId,
       name: dto.name,
@@ -28,8 +34,24 @@ export class AgentsService {
   }
 
   // All list/find methods are scoped to the requesting org — prevents IDOR
-  async findAll(orgId: string): Promise<Agent[]> {
-    return this.agentsRepo.find({ where: { orgId } });
+  async findAll(orgId: string, user: AuthUser): Promise<Agent[]> {
+    const agents = await this.agentsRepo.find({ where: { orgId } });
+    if (user.role === Role.Member) {
+      const selectiveAgents = await this.userAgentAccessRepo.find({
+        where: {
+          userId: user.id,
+          agent: {
+            orgId
+          }
+        },
+      });
+      if (selectiveAgents.length > 0) {
+        return agents.filter((a) => {
+          return selectiveAgents.findIndex((s) => s.agentId == a.id) !== -1;
+        })
+      }
+    }
+    return agents;
   }
 
   async findAllIds(orgId: string): Promise<Agent[]> {
@@ -40,6 +62,24 @@ export class AgentsService {
     const agent = await this.agentsRepo.findOne({ where: { id: agentId } });
     if (!agent) throw new NotFoundException("Agent not found");
     if (agent.orgId !== orgId) throw new ForbiddenException();
+    return agent;
+  }
+
+  async findOneWithRoleCheck(agentId: string, user: AuthUser) {
+    const agent = await this.agentsRepo.findOneBy({ id: agentId });
+    if (user.role === Role.Member) {
+      const selectiveAgents = await this.userAgentAccessRepo.find({
+        where: {
+          userId: user.id,
+          agent: {
+            orgId: user.orgId
+          }
+        }
+      });
+      if (selectiveAgents.length > 0 && selectiveAgents.find((a) => a.agentId == agentId)) {
+        return agent;
+      }
+    }
     return agent;
   }
 
@@ -56,6 +96,14 @@ export class AgentsService {
   async remove(orgId: string, agentId: string): Promise<void> {
     const agent = await this.findOne(orgId, agentId);
     await this.agentsRepo.remove(agent);
+  }
+
+  async canAccessAgent(agentId: string, user: AuthUser) {
+    if (user.role === Role.Member) {
+      const allowedAgents = await this.userAgentAccessRepo.find({ where: { agentId, userId: user.id } });
+      return allowedAgents.length > 0;
+    }
+    return true;
   }
 
   // Used by agent-core and widget — verifies agent belongs to org's API key

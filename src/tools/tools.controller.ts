@@ -14,6 +14,8 @@ import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators';
 import { AuthUser } from '@modules/auth/interfaces/jwt-payload.interface';
+import { Roles } from '@common/decorators/roles.decorator';
+import { Role } from '@common/enums/role.enum';
 
 @ApiTags('Tools')
 @ApiBearerAuth()
@@ -23,6 +25,7 @@ export class ToolsController {
   constructor(private readonly toolsService: ToolsService) {}
 
   @Post()
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Add a tool to an agent' })
   create(
     @CurrentUser() user: AuthUser,
@@ -52,6 +55,7 @@ export class ToolsController {
   }
 
   @Patch(':toolId')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Update a tool' })
   update(
     @CurrentUser() user: AuthUser,
@@ -63,6 +67,7 @@ export class ToolsController {
   }
 
   @Delete(':toolId')
+  @Roles(Role.Admin, Role.Owner)
   @ApiOperation({ summary: 'Delete a tool' })
   remove(
     @CurrentUser() user: AuthUser,
