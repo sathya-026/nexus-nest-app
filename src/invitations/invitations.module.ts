@@ -5,9 +5,10 @@ import { OrgInvitation } from './entities/org-invitation.entity';
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
 import { MailModule } from '@modules/mail/mail.module';
+import { AuthModule } from '@modules/auth/auth.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([OrgInvitation, User]), MailModule],
+    imports: [TypeOrmModule.forFeature([OrgInvitation, User]), AuthModule, MailModule],
     controllers: [InvitationsController],
     providers: [InvitationsService],
     exports: [InvitationsService],

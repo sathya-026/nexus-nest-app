@@ -23,6 +23,7 @@ export class InvitationsService {
     constructor(
         @InjectRepository(OrgInvitation) private invRepo: Repository<OrgInvitation>,
         @InjectRepository(User) private usersRepo: Repository<User>,
+        private authService: AuthService,
         private dataSource: DataSource,
         private mailService: MailService,
         private config: ConfigService,
@@ -49,7 +50,7 @@ export class InvitationsService {
         const tokenHash = this.hash(rawToken);
         const agentIds = dto.agentIds ?? null;
         const frontendUrl = this.config.getOrThrow('frontendUrl');
-        const inviteUrl = `${frontendUrl}/invite/accept?token=${rawToken}`;
+        const inviteUrl = `${frontendUrl}invite/accept?token=${rawToken}`;
 
         // Upsert — regenerates token even on resend; no-ops if already accepted
         const result = await this.dataSource.query<{ id: string }[]>(
@@ -113,7 +114,6 @@ export class InvitationsService {
             where: { tokenHash: this.hash(dto.token) },
             relations: ['org'],
         });
-
         if (!inv) throw new NotFoundException('Invalid invitation link');
         if (inv.acceptedAt) throw new ConflictException('Invitation has already been used');
         if (inv.expiresAt < new Date()) throw new GoneException('Invitation link has expired');
@@ -146,7 +146,7 @@ export class InvitationsService {
 
             // Mark invitation accepted
             await tx.update(OrgInvitation, { id: inv.id }, { acceptedAt: new Date() });
-
+            await this.authService.issueTokens(newUser, res);
             return newUser;
         });
 
