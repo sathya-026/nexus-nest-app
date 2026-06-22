@@ -88,7 +88,6 @@ export class AgentsController {
   @Public()
   @Get(':id/widget-config')
   async getWidgetConfig(@Param('id') id: string) {
-    console.log('check-in')
     const agent = await this.agentsService.findByIdPublic(id);
     if (!agent) throw new NotFoundException('Agent not found');
 

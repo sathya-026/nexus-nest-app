@@ -24,14 +24,17 @@ import {
   HttpStatus,
   Logger,
   NotFoundException,
-  Post
+  Post,
+  UseGuards
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AgentsService } from '../agents/agents.service';
 import { ConversationsService } from './conversations.service';
 import { FetchHistoryDto } from './dto/chat-widget.dto';
+import { WidgetAuthGuard } from '@common/guards/widget-auth.guard';
 
 @ApiTags('Chat')
+@UseGuards(WidgetAuthGuard)
 @Controller('chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
