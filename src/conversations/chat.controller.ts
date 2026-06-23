@@ -32,8 +32,10 @@ import { AgentsService } from '../agents/agents.service';
 import { ConversationsService } from './conversations.service';
 import { FetchHistoryDto } from './dto/chat-widget.dto';
 import { WidgetAuthGuard } from '@common/guards/widget-auth.guard';
+import { Public } from '@common/decorators';
 
 @ApiTags('Chat')
+@Public()
 @UseGuards(WidgetAuthGuard)
 @Controller('chat')
 export class ChatController {
