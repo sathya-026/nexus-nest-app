@@ -50,3 +50,13 @@ export class UpdateAgentDto extends PartialType(CreateAgentDto) {
   @IsBoolean()
   isActive?: boolean;
 }
+
+export class EmbedDto {
+  @ApiProperty({ example: 'http://localhost:3000/api' })
+  @IsString()
+  nestUrl: string;
+
+  @ApiProperty({ example: 'http://localhost:4000/api' })
+  @IsString()
+  agentCoreUrl: string;
+}

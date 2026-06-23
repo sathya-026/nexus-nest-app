@@ -3,6 +3,10 @@ export default () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173/',
 
+  embed: {
+    version: process.env.EMBED_VERSION || "latest",
+  },
+
   database: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT, 10) || 5432,

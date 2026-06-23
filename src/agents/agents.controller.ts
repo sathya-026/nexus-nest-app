@@ -20,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AgentsService } from './agents.service';
-import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
+import { CreateAgentDto, EmbedDto, UpdateAgentDto } from './dto/agent.dto';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/enums/role.enum';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -99,18 +99,23 @@ export class AgentsController {
     };
   }
 
-  @Get(':id/embed')
+  @Post(':id/embed')
   @ApiOperation({ summary: 'Generate embed snippet for the agent' })
   getEmbedCode(
     @CurrentUser() user: AuthUser,
+    @Body() dto: EmbedDto,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    // Verify ownership first
     return this.agentsService.findOne(user.orgId, id).then((agent) => {
-      const widgetUrl = `https://cdn.nexus.ai/widget.js`; // Replace with actual CDN
-      return {
-        scriptTag: `<script src="${widgetUrl}" data-agent-id="${agent.id}" defer></script>`,
-        reactComponent: `<NexusWidget agentId="${agent.id}" />`,
+      const widgetUrl = `https://cdn.jsdelivr.net/npm/@nameless26/widget@${this.config.get('embed.version')}/dist/embed.iife.js`;    
+      const nestUrl = dto.nestUrl.replace(/\/$/, "");
+      const agentCoreUrl = dto.agentCoreUrl.replace(/\/$/, "");
+
+      return {        
+        scriptTag: `<script data-agent-name="${agent.name}" data-theme="light" src="${widgetUrl}" data-api-base-url="${nestUrl}" data-agent-core-url="${agentCoreUrl}" data-agent-id="${agent.id}" defer></script>`,
+        reactComponent: `<NexusWidget agentName="${agent.name}" theme="light" baseUrl="${nestUrl}" agentCoreUrl="${agentCoreUrl}" agentId="${agent.id}" />`,
+        scriptTagPlaceholder : `<script data-agent-name="${agent.name}" data-theme="light" defer></script>`,
+        reactComponentPlaceholder : `<NexusWidget agentName="${agent.name}" theme="light" />`,
         agentId: agent.id,
       };
     });
