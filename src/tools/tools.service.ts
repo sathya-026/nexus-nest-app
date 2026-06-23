@@ -1,11 +1,12 @@
 import {
+  HttpStatus,
   Injectable,
-  NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 import * as crypto from 'crypto';
 import { Tool } from './entities/tool.entity';
 import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
@@ -87,21 +88,21 @@ export class ToolsService {
     const tool = await this.toolsRepo.findOne({
       where: { id: toolId, agentId },
     });
-    if (!tool) throw new NotFoundException('Tool not found');
+    if (!tool) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Tool not found');
     return { ...tool, headers: undefined }; // Strip headers in API responses
   }
 
   // Called internally by agent-core — returns decrypted headers for HTTP execution
   async findForExecution(agentId: string, toolId: string): Promise<Tool> {
     const tool = await this.toolsRepo.findOne({ where: { id: toolId, agentId } });
-    if (!tool) throw new NotFoundException('Tool not found');
+    if (!tool) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Tool not found');
     if (tool.headers) tool.headers = this.decrypt(tool.headers);
     return tool;
   }
 
   async update(orgId: string, agentId: string, toolId: string, dto: UpdateToolDto): Promise<Tool> {
     const tool = await this.toolsRepo.findOne({ where: { id: toolId, agentId } });
-    if (!tool) throw new NotFoundException('Tool not found');
+    if (!tool) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Tool not found');
     await this.agentsService.findOne(orgId, agentId);
 
     if (dto.headers) dto = { ...dto, headers: this.encrypt(dto.headers) as any };
@@ -112,7 +113,7 @@ export class ToolsService {
 
   async remove(orgId: string, agentId: string, toolId: string): Promise<void> {
     const tool = await this.toolsRepo.findOne({ where: { id: toolId, agentId } });
-    if (!tool) throw new NotFoundException('Tool not found');
+    if (!tool) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Tool not found');
     await this.agentsService.findOne(orgId, agentId);
     await this.toolsRepo.remove(tool);
   }

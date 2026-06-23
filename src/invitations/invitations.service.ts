@@ -1,6 +1,7 @@
 import {
     Injectable, ConflictException,
     NotFoundException, ForbiddenException, GoneException,
+    HttpStatus,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -17,6 +18,8 @@ import { AuthService } from '../auth/auth.service';
 import { AuthUser } from '../auth/interfaces/jwt-payload.interface';
 import { Role } from '../common/enums/role.enum';
 import { SendInviteDto, AcceptInviteDto } from './dto/index';
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 
 @Injectable()
 export class InvitationsService {
@@ -33,11 +36,11 @@ export class InvitationsService {
 
     async send(dto: SendInviteDto, caller: AuthUser): Promise<{ message: string }> {
         // Only owners and admins can invite
-        if (caller.role === Role.Member) throw new ForbiddenException();
+        if (caller.role === Role.Member) throw new AppException(ErrorCode.FORBIDDEN, HttpStatus.FORBIDDEN);
 
         // Owners can invite both admins and members; admins can only invite members
         if (caller.role === Role.Admin && dto.role === 'admin') {
-            throw new ForbiddenException('Admins cannot invite other admins');
+            throw new AppException(ErrorCode.FORBIDDEN, HttpStatus.FORBIDDEN, 'Admins cannot invite other admins');
         }
 
         // Guard: email already in the org
@@ -78,7 +81,7 @@ export class InvitationsService {
 
         // Empty RETURNING → conflict row has accepted_at set → already a member
         if (result.length === 0) {
-            throw new ConflictException('User is already a member of this organization');
+            throw new AppException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, 'User is already a member of this organization');
         }
 
         // Load org name for the email
@@ -100,9 +103,9 @@ export class InvitationsService {
             relations: ['org'],
         });
 
-        if (!inv) throw new NotFoundException('Invalid invitation link');
-        if (inv.acceptedAt) throw new ConflictException('Invitation has already been used');
-        if (inv.expiresAt < new Date()) throw new GoneException('Invitation has expired');
+        if (!inv) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Invalid invitation link');
+        if (inv.acceptedAt) throw new AppException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, 'Invitation has already been used');
+        if (inv.expiresAt < new Date()) throw new AppException(ErrorCode.GONE, HttpStatus.GONE, 'Invitation has expired');
 
         return { email: inv.email, orgName: inv.org.name, role: inv.role };
     }
@@ -114,13 +117,15 @@ export class InvitationsService {
             where: { tokenHash: this.hash(dto.token) },
             relations: ['org'],
         });
-        if (!inv) throw new NotFoundException('Invalid invitation link');
-        if (inv.acceptedAt) throw new ConflictException('Invitation has already been used');
-        if (inv.expiresAt < new Date()) throw new GoneException('Invitation link has expired');
+
+        if (!inv) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Invalid invitation link');
+        if (inv.acceptedAt) throw new AppException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, 'Invitation has already been used');
+        if (inv.expiresAt < new Date()) throw new AppException(ErrorCode.GONE, HttpStatus.GONE, 'Invitation has expired');
 
         // Multi-org is post-MVP: block if email already registered anywhere
         const existing = await this.usersRepo.findOne({ where: { email: inv.email } });
-        if (existing) throw new ConflictException('An account with this email already exists');
+
+        if (existing) throw new AppException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, 'An account with this email already exists');
 
         const user = await this.dataSource.transaction(async (tx) => {
             // Create user

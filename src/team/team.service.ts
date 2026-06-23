@@ -1,15 +1,17 @@
+import { ErrorCode } from '@common/constants/error-codes';
+import { AppException } from '@common/exceptions/app.exception';
 import {
-    Injectable, NotFoundException,
-    ForbiddenException, BadRequestException,
+    HttpStatus,
+    Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
-import { User } from '../users/entities/user.entity';
-import { UserAgentAccess } from './entities/user-agent-access.entity';
 import { AuthUser } from '../auth/interfaces/jwt-payload.interface';
 import { Role } from '../common/enums/role.enum';
+import { User } from '../users/entities/user.entity';
 import { ChangeRoleDto, UpdateAgentAccessDto } from './dto/index';
+import { UserAgentAccess } from './entities/user-agent-access.entity';
 
 @Injectable()
 export class TeamService {
@@ -33,15 +35,27 @@ export class TeamService {
 
     async changeRole(targetId: string, dto: ChangeRoleDto, caller: AuthUser) {
         if (caller.role !== Role.Owner) {
-            throw new ForbiddenException('Only the owner can change roles');
+            throw new AppException(
+                ErrorCode.FORBIDDEN,
+                HttpStatus.FORBIDDEN,
+                'Only the owner can change roles',
+            );
         }
         if (targetId === caller.id) {
-            throw new BadRequestException('You cannot change your own role');
+            throw new AppException(
+                ErrorCode.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST,
+                'You cannot change your own role',
+            );
         }
 
         const target = await this.findMember(targetId, caller.orgId);
         if (target.role === Role.Owner) {
-            throw new ForbiddenException('Cannot change the owner\'s role');
+            throw new AppException(
+                ErrorCode.FORBIDDEN,
+                HttpStatus.FORBIDDEN,
+                'Cannot change the owner\'s role',
+            );
         }
 
         target.role = dto.role;
@@ -53,18 +67,26 @@ export class TeamService {
 
     async removeMember(targetId: string, caller: AuthUser) {
         if (targetId === caller.id) {
-            throw new BadRequestException('You cannot remove yourself');
+            throw new AppException(
+                ErrorCode.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST,
+                'You cannot remove yourself',
+            );
         }
 
         const target = await this.findMember(targetId, caller.orgId);
 
         if (target.role === Role.Owner) {
-            throw new ForbiddenException('Cannot remove the owner');
+            throw new AppException(
+                ErrorCode.FORBIDDEN,
+                HttpStatus.FORBIDDEN,
+                'Cannot remove the owner',
+            );
         }
 
         // Admins can only remove members — not other admins
         if (caller.role === Role.Admin && target.role !== Role.Member) {
-            throw new ForbiddenException('Admins can only remove members');
+            throw new AppException(ErrorCode.FORBIDDEN, HttpStatus.FORBIDDEN, 'Admins can only remove members');
         }
 
         await this.dataSource.transaction(async (tx) => {
@@ -110,7 +132,12 @@ export class TeamService {
     // Replaces the entire access set in one transaction.
 
     async updateAgentAccess(targetId: string, dto: UpdateAgentAccessDto, caller: AuthUser) {
-        if (caller.role === Role.Member) throw new ForbiddenException();
+        if (caller.role === Role.Member) {
+            throw new AppException(
+                ErrorCode.FORBIDDEN,
+                HttpStatus.FORBIDDEN,
+            );
+        }
 
         const target = await this.findMember(targetId, caller.orgId);
         this.assertMemberRole(target);
@@ -137,16 +164,18 @@ export class TeamService {
 
     private async findMember(userId: string, orgId: string): Promise<User> {
         const user = await this.usersRepo.findOne({ where: { id: userId, orgId } });
-        if (!user) throw new NotFoundException('Member not found');
+        if (!user) throw new AppException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            HttpStatus.NOT_FOUND,
+            'Member not found',
+        );
         return user;
     }
 
     // Access restrictions only apply to members — throw early if called on an admin/owner
     private assertMemberRole(user: User) {
         if (user.role !== Role.Member) {
-            throw new BadRequestException(
-                'Agent access restrictions only apply to members. Admins and owners always have full access.',
-            );
+            throw new AppException(ErrorCode.BAD_REQUEST, HttpStatus.BAD_REQUEST, 'Agent access restrictions only apply to members. Admins and owners always have full access.');
         }
     }
 }

@@ -1,3 +1,5 @@
+// Deprecated. Use AllExceptionsFilter instead.
+
 import {
   ExceptionFilter,
   Catch,

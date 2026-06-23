@@ -1,10 +1,11 @@
 import {
-  ConflictException,
+  HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -38,7 +39,11 @@ export class AuthService {
 
   async register(dto: RegisterDto, res: Response) {
     const exists = await this.usersRepo.findOne({ where: { email: dto.email } });
-    if (exists) throw new ConflictException('Email already registered');
+    if (exists) throw new AppException(
+      ErrorCode.RESOURCE_CONFLICT,
+      HttpStatus.CONFLICT,
+      'Email already registered',
+    );
 
     const org = this.orgsRepo.create({ name: dto.organizationName });
     await this.orgsRepo.save(org);
@@ -66,7 +71,10 @@ export class AuthService {
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       // Unified message — never reveal which field was wrong
-      throw new UnauthorizedException('Invalid credentials');
+      throw new AppException(
+        ErrorCode.AUTH_INVALID_CREDENTIALS,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     await this.issueTokens(user, res);
@@ -87,13 +95,21 @@ export class AuthService {
         secret: this.config.getOrThrow('jwt.refreshSecret'),
       });
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new AppException(
+        ErrorCode.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED,
+        'Invalid refresh token',
+      );
     }
 
     // 2. Compare hash against Redis — catches rotated or logged-out tokens
     const stored = await this.cacheService.get(`refresh:${payload.sub}`);
     if (!stored || stored !== this.hash(rawRefreshToken)) {
-      throw new UnauthorizedException('Session expired — please log in again');
+      throw new AppException(
+        ErrorCode.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED,
+        'Session expired — please log in again',
+      );
     }
 
     // 3. Load user and re-issue
@@ -101,7 +117,10 @@ export class AuthService {
       where: { id: payload.sub },
       relations: ['organization'],
     });
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new AppException(
+      ErrorCode.UNAUTHORIZED,
+      HttpStatus.UNAUTHORIZED,
+    );
 
     await this.issueTokens(user, res);
   }

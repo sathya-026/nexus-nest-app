@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
 import { RolesGuard } from './common/guards/roles.guard';
 import { NestExpressApplication } from '@nestjs/platform-express'; // <-- 1. IMPORT THIS
 import * as cookieParser from 'cookie-parser';
@@ -47,7 +47,7 @@ async function bootstrap() {
   );
 
   // ── Global exception filter ───────────────────────────────────────────────
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // ── Global roles guard ────────────────────────────────────────────────────
   const reflector = app.get(Reflector);

@@ -55,7 +55,7 @@ export class ChatController {
   ) {
     try {
       // ── 1. Validate agent ────────────────────────────────────────────
-      const agent = await this.agentsService.findForEmbed(dto.agentId);
+      const agent = await this.agentsService.findByIdPublic(dto.agentId);
       if (!agent) throw new NotFoundException('Agent not found');
 
       // ── 2. Domain check ──────────────────────────────────────────────

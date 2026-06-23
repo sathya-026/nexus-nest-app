@@ -18,6 +18,8 @@ import { WidgetOtpCode } from './entities/widget-opt-code.entity';
 import { uuidv7 } from 'node_modules/uuidv7/dist/index.cjs';
 import { CacheService } from '@modules/redis/cache.service';
 import { JwtService } from '@nestjs/jwt';
+import { ErrorCode } from '@common/constants/error-codes';
+import { AppException } from '@common/exceptions/app.exception';
 
 
 
@@ -64,10 +66,7 @@ export class WidgetAuthService {
       [dto.email, dto.agentId],
     );
     if (+count >= OTP_RATE_LIMIT) {
-      throw new HttpException(
-        'Too many requests. Please wait before requesting another code.',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+      throw new AppException(ErrorCode.TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS, 'Too many requests. Please wait before requesting another code.')
     }
 
     // Generate and store OTP
@@ -103,11 +102,11 @@ export class WidgetAuthService {
     });
 
     if (!otp || otp.attempts >= 3) {
-      throw new UnauthorizedException('Invalid or expired code');
+      throw new AppException(ErrorCode.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, 'Invalid or expired code');
     }
     if (this.hash(dto.code) !== otp.codeHash) {
       await this.otpRepo.increment({ id: otp.id }, 'attempts', 1);
-      throw new UnauthorizedException('Incorrect code');
+      throw new AppException(ErrorCode.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, 'Incorrect code');
     }
 
     // Mark as used
@@ -115,7 +114,7 @@ export class WidgetAuthService {
     const agent = await this.agentsRepo.findOne({
       where: { id: dto.agentId, isActive: true },
     });
-    if (!agent) throw new NotFoundException('Agent not found');
+    if (!agent) throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND, 'Agent not found');
 
     const tokenKey = `widget_session:${agent.id}:${dto.sessionId}`;
     const existingToken = await this.cacheService.get(tokenKey);

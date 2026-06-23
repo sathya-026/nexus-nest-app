@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Organization } from './entities/organization.entity';
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 
 interface CreateOrgInput {
   name: string;
@@ -29,7 +31,11 @@ export class OrganizationsService {
 
   async updatePlan(id: string, plan: string): Promise<Organization> {
     const org = await this.findById(id);
-    if (!org) throw new NotFoundException('Organization not found');
+    if (!org) throw new AppException(
+      ErrorCode.RESOURCE_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+      'Organization not found',
+    );
     org.plan = plan;
     return this.orgsRepo.save(org);
   }

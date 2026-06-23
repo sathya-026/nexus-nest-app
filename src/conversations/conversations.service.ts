@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 import {
   Conversation,
   ConversationStatus,
@@ -39,7 +41,11 @@ export class ConversationsService {
     const conv = await this.conversationsRepo.findOne({
       where: { id: conversationId },
     });
-    if (!conv) throw new NotFoundException("Conversation not found");
+    if (!conv) throw new AppException(
+      ErrorCode.RESOURCE_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+      "Conversation not found",
+    );
     return conv;
   }
 
@@ -48,7 +54,11 @@ export class ConversationsService {
       where: { agentId: In(agentIds) },
       select: ["totalTokens", "messageCount"],
     });
-    if (!conv) throw new NotFoundException("Conversation not found");
+    if (!conv) throw new AppException(
+      ErrorCode.RESOURCE_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+      "Conversation not found",
+    );
     return conv;
   }
 
@@ -92,7 +102,11 @@ export class ConversationsService {
         where: { sessionId },
         select: ["id"],
       });
-      if (!conversation) throw new NotFoundException("Conversation not found");
+      if (!conversation) throw new AppException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        "Conversation not found",
+      );
 
       const qb = this.messagesRepo
         .createQueryBuilder("m")
@@ -115,7 +129,11 @@ export class ConversationsService {
     }
     catch (err) {
       console.error('Error fetching session messages:', err);
-      throw new NotFoundException("Conversation not found");
+      throw new AppException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        "Conversation not found",
+      );
     }
   }
 

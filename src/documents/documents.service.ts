@@ -4,13 +4,15 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AgentsService } from "../agents/agents.service";
 import { Document, DocumentStatus } from "./entities/document.entity";
 import { UpdateDocDto } from "./dto/update-doc.dto";
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 
 @Injectable()
 export class DocumentsService {
@@ -95,7 +97,11 @@ export class DocumentsService {
     const doc = await this.docsRepo.findOne({
       where: { id: documentId, agentId },
     });
-    if (!doc) throw new NotFoundException("Document not found");
+    if (!doc) throw new AppException(
+      ErrorCode.RESOURCE_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+      "Document not found",
+    );
     return doc;
   }
 

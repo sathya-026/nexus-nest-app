@@ -2,12 +2,13 @@ import { Role } from "@common/enums/role.enum";
 import { AuthUser } from "@modules/auth/interfaces/jwt-payload.interface";
 import { UserAgentAccess } from "@modules/team/entities/user-agent-access.entity";
 import {
-  ForbiddenException,
+  HttpStatus,
   Injectable,
-  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { AppException } from '@common/exceptions/app.exception';
+import { ErrorCode } from '@common/constants/error-codes';
 import { CreateAgentDto, UpdateAgentDto } from "./dto/agent.dto";
 import { Agent } from "./entities/agent.entity";
 
@@ -60,8 +61,14 @@ export class AgentsService {
 
   async findOne(orgId: string, agentId: string): Promise<Agent> {
     const agent = await this.agentsRepo.findOne({ where: { id: agentId } });
-    if (!agent) throw new NotFoundException("Agent not found");
-    if (agent.orgId !== orgId) throw new ForbiddenException();
+    if (!agent) throw new AppException(
+      ErrorCode.AGENT_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+    );
+    if (agent.orgId !== orgId) throw new AppException(
+      ErrorCode.FORBIDDEN,
+      HttpStatus.FORBIDDEN,
+    );
     return agent;
   }
 
@@ -81,6 +88,11 @@ export class AgentsService {
       }
     }
     return agent;
+  }
+
+  // Used by agent-core and widget — verifies agent belongs to org's API key
+  async findByIdPublic(agentId: string): Promise<Agent | null> {
+    return this.agentsRepo.findOne({ where: { id: agentId, isActive: true } });
   }
 
   async update(
@@ -106,23 +118,6 @@ export class AgentsService {
     return true;
   }
 
-  // Used by agent-core and widget — verifies agent belongs to org's API key
-  async findByIdPublic(agentId: string): Promise<Agent | null> {
-    return this.agentsRepo.findOne({ where: { id: agentId, isActive: true } });
-  }
-
-  // src/agents/agents.service.ts  — add these two methods
-
-  /**
-   * Lightweight fetch for embed context — no JWT user needed,
-   * only checks org ownership and active status.
-   */
-  async findForEmbed(agentId: string): Promise<Agent | null> {
-    return this.agentsRepo.findOne({
-      where: { id: agentId, isActive: true },
-    });
-  }
-
   /**
    * Validate the request Origin against agent.allowedDomains.
    * Empty allowedDomains = allow all (dev mode).
@@ -137,7 +132,9 @@ export class AgentsService {
       .filter(Boolean);
 
     if (!origin) {
-      throw new ForbiddenException(
+      throw new AppException(
+        ErrorCode.AGENT_ORIGIN_REQUIRED,
+        HttpStatus.FORBIDDEN,
         "Origin header required for domain-restricted agents",
       );
     }
@@ -148,7 +145,9 @@ export class AgentsService {
     );
 
     if (!permitted) {
-      throw new ForbiddenException(
+      throw new AppException(
+        ErrorCode.AGENT_ORIGIN_NOT_PERMITTED,
+        HttpStatus.FORBIDDEN,
         `Origin '${origin}' is not permitted for this agent`,
       );
     }
