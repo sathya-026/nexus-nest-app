@@ -8,10 +8,12 @@ import { ConversationsService } from './conversations.service';
 import { ChatController } from './chat.controller';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { AgentsModule } from '../agents/agents.module';
+import { Agent } from '@modules/agents/entities/agent.entity';
+import { WidgetAuthToken } from '@modules/widget/auth/entities/widget-auth-token.entity';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Conversation, Message, ToolCall]),
+  imports: [TypeOrmModule.forFeature([Agent, WidgetAuthToken, Conversation, Message, ToolCall]),
   ConfigModule,
   OrganizationsModule,
   AgentsModule,

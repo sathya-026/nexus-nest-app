@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { IsNull, Repository } from 'typeorm';
 
 import { WidgetAuthToken } from '@modules/widget/auth/entities/widget-auth-token.entity';
-import { Agent } from '../../agents/entities/agent.entity';
+import { Agent } from '@modules/agents/entities/agent.entity';
 
 // Applied on the NestJS chat endpoint.
 // Public agents: pass through.

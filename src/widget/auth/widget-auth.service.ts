@@ -134,13 +134,24 @@ export class WidgetAuthService {
     };
 
     const token = this.jwtService.sign(payload);
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MS).toISOString();
+    await this.tokenRepo.save({ agentId: agent.id, email: dto.email, tokenHash: this.hash(token), expiresAt })
+
     const sessionData = {
       token,
-      expiresAt: new Date(Date.now() + TOKEN_EXPIRY_MS).toISOString(),
+      expiresAt,
     };
     await this.cacheService.set(tokenKey, JSON.stringify(sessionData), TOKEN_EXPIRY_MS);
 
     return sessionData;
+  }
+
+  // ─── Guard Helper ───────────────────────────────────────────────────────────
+
+  async getToken(tokenHash: string, agentId: string) {
+    return await this.tokenRepo.findOne({
+      where: { tokenHash, agentId, revokedAt: IsNull() },
+    });
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
