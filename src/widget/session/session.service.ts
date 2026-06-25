@@ -63,6 +63,7 @@ export class SessionService {
 
     private assertOriginAllowed(origin: string, allowedDomains: string): void {
         // Dev bypass — never reaches production
+        if (!allowedDomains?.trim()) return;
         if (process.env.NODE_ENV !== 'production') {
             try {
                 const { hostname } = new URL(origin ?? '');
