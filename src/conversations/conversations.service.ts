@@ -94,12 +94,13 @@ export class ConversationsService {
 
   async getSessionMessages(
     sessionId: string,
+    agetId: string,
     cursor?: number,
     limit = 50,
   ): Promise<{ messages: Message[]; nextCursor: number | null, conversationId: string }> {
     try {
       const conversation = await this.conversationsRepo.findOne({
-        where: { sessionId },
+        where: { sessionId, agentId: agetId },
         select: ["id"],
       });
       if (!conversation) throw new AppException(

@@ -65,6 +65,7 @@ export class ChatController {
       // ── 3. Get messages ──────────────────────────────────────────────
       const { messages, nextCursor, conversationId } = await this.conversationsService.getSessionMessages(
         dto.sessionId,
+        dto.agentId
       );
 
       return { messages, nextCursor, conversationId };
